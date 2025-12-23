@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { 
@@ -22,8 +23,10 @@ interface ToolbarProps {
   onSave: () => void
   onExport: () => void
   onAddToCart: () => void
+  onViewCart: () => void
   canUndo: boolean
   canRedo: boolean
+  cartItemCount: number
 }
 
 export function Toolbar({
@@ -34,8 +37,10 @@ export function Toolbar({
   onSave,
   onExport,
   onAddToCart,
+  onViewCart,
   canUndo,
   canRedo,
+  cartItemCount,
 }: ToolbarProps) {
   const tools: Array<{ id: ToolMode; icon: React.ReactNode; label: string }> = [
     { id: 'select', icon: <Cube size={20} />, label: 'Select' },
@@ -132,7 +137,7 @@ export function Toolbar({
           </Button>
         </div>
 
-        <div className="mt-auto">
+        <div className="mt-auto space-y-2">
           <Button 
             onClick={onAddToCart} 
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
@@ -141,6 +146,18 @@ export function Toolbar({
             <ShoppingCart size={20} />
             <span className="ml-2">Add to Cart - $29.99</span>
           </Button>
+          
+          {cartItemCount > 0 && (
+            <Button 
+              onClick={onViewCart} 
+              variant="outline"
+              className="w-full relative"
+            >
+              <ShoppingCart size={18} />
+              <span className="ml-2">View Cart</span>
+              <Badge className="ml-auto">{cartItemCount}</Badge>
+            </Button>
+          )}
         </div>
       </div>
     </TooltipProvider>

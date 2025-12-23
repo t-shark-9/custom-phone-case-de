@@ -55,11 +55,11 @@ A 3D phone case customization platform where users can visually design personali
 - **Success criteria**: Complete state persistence, thumbnail generation, quick loading
 
 ### Shopping Cart & Checkout
-- **Functionality**: Add customized case to cart, review order, proceed to purchase
-- **Purpose**: Converts creative work into actual product orders
-- **Trigger**: User clicks "Add to Cart" from customizer
-- **Progression**: Finalize design → Click add to cart → View cart summary → Adjust quantity → Click checkout → Enter shipping/payment → Confirm order
-- **Success criteria**: Secure payment processing, order confirmation, design preservation in order
+- **Functionality**: Add customized case to cart, review order, proceed to purchase with full checkout flow
+- **Purpose**: Converts creative work into actual product orders with a seamless e-commerce experience
+- **Trigger**: User clicks "Add to Cart" from customizer, or "View Cart" to review items
+- **Progression**: Finalize design → Click add to cart → Toast confirmation → Click view cart → Review items with preview → Adjust quantities → View order summary → Click checkout → Enter shipping info → Enter payment details → Confirm order → Order confirmation screen
+- **Success criteria**: Secure payment processing, order confirmation, design preservation in order, persistent cart across sessions, quantity adjustment, item removal
 
 ### 3D Model Export
 - **Functionality**: Download customized case as 3D model file (.STL, .OBJ) for 3D printing

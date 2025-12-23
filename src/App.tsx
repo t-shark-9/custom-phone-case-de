@@ -4,6 +4,7 @@ import { Toolbar } from './components/Toolbar'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { PhoneCaseCanvas } from './components/PhoneCaseCanvas'
 import { SaveDesignDialog } from './components/SaveDesignDialog'
+import { CartPage } from './components/CartPage'
 import { Toaster, toast } from 'sonner'
 import type { 
   ToolMode, 
@@ -17,6 +18,7 @@ import type {
 import { CASE_PRICE } from './lib/types'
 
 function App() {
+  const [currentView, setCurrentView] = useState<'designer' | 'cart'>('designer')
   const [currentTool, setCurrentTool] = useState<ToolMode>('select')
   const [caseColor, setCaseColor] = useState('#8B5CF6')
   const [brushColor, setBrushColor] = useState('#000000')
@@ -128,55 +130,71 @@ function App() {
     })
   }, [caseColor, strokes, images, parts, setCart, cart])
 
+  const handleViewCart = useCallback(() => {
+    setCurrentView('cart')
+  }, [])
+
+  const handleBackToDesigner = useCallback(() => {
+    setCurrentView('designer')
+  }, [])
+
   return (
-    <div className="h-screen w-screen flex flex-col lg:flex-row overflow-hidden">
+    <>
       <Toaster position="top-right" richColors />
       
-      <Toolbar
-        currentTool={currentTool}
-        onToolChange={setCurrentTool}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onSave={() => setSaveDialogOpen(true)}
-        onExport={handleExport}
-        onAddToCart={handleAddToCart}
-        canUndo={historyIndex > 0}
-        canRedo={historyIndex < history.length - 1}
-      />
+      {currentView === 'cart' ? (
+        <CartPage onBack={handleBackToDesigner} />
+      ) : (
+        <div className="h-screen w-screen flex flex-col lg:flex-row overflow-hidden">
+          <Toolbar
+            currentTool={currentTool}
+            onToolChange={setCurrentTool}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onSave={() => setSaveDialogOpen(true)}
+            onExport={handleExport}
+            onAddToCart={handleAddToCart}
+            onViewCart={handleViewCart}
+            canUndo={historyIndex > 0}
+            canRedo={historyIndex < history.length - 1}
+            cartItemCount={(cart || []).length}
+          />
 
-      <div className="flex-1 bg-background p-4 lg:p-8 overflow-hidden">
-        <PhoneCaseCanvas
-          caseColor={caseColor}
-          parts={parts}
-          strokes={strokes}
-          onPartClick={(partId) => {
-            const part = parts.find(p => p.id === partId)
-            if (part) {
-              toast.info('Part selected')
-            }
-          }}
-        />
-      </div>
+          <div className="flex-1 bg-background p-4 lg:p-8 overflow-hidden">
+            <PhoneCaseCanvas
+              caseColor={caseColor}
+              parts={parts}
+              strokes={strokes}
+              onPartClick={(partId) => {
+                const part = parts.find(p => p.id === partId)
+                if (part) {
+                  toast.info('Part selected')
+                }
+              }}
+            />
+          </div>
 
-      <PropertiesPanel
-        currentTool={currentTool}
-        caseColor={caseColor}
-        brushColor={brushColor}
-        brushSize={brushSize}
-        onCaseColorChange={setCaseColor}
-        onBrushColorChange={setBrushColor}
-        onBrushSizeChange={setBrushSize}
-        onSelectPart={handlePartSelect}
-        onImageUpload={handleImageUpload}
-        selectedPartId={selectedPart?.id}
-      />
+          <PropertiesPanel
+            currentTool={currentTool}
+            caseColor={caseColor}
+            brushColor={brushColor}
+            brushSize={brushSize}
+            onCaseColorChange={setCaseColor}
+            onBrushColorChange={setBrushColor}
+            onBrushSizeChange={setBrushSize}
+            onSelectPart={handlePartSelect}
+            onImageUpload={handleImageUpload}
+            selectedPartId={selectedPart?.id}
+          />
 
-      <SaveDesignDialog
-        open={saveDialogOpen}
-        onOpenChange={setSaveDialogOpen}
-        onSave={handleSaveDesign}
-      />
-    </div>
+          <SaveDesignDialog
+            open={saveDialogOpen}
+            onOpenChange={setSaveDialogOpen}
+            onSave={handleSaveDesign}
+          />
+        </div>
+      )}
+    </>
   )
 }
 
