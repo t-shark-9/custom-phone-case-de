@@ -2,13 +2,18 @@ import { PartsLibraryPanel } from './PartsLibraryPanel'
 import { ColorPickerPanel } from './ColorPickerPanel'
 import { DrawToolPanel } from './DrawToolPanel'
 import { ImageUploadPanel } from './ImageUploadPanel'
-import type { ToolMode, Part3D } from '@/lib/types'
+import type { ToolMode, Part3D, PhoneModel } from '@/lib/types'
+import { PHONE_MODELS } from '@/lib/types'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 
 interface PropertiesPanelProps {
   currentTool: ToolMode
+  phoneModel: PhoneModel
   caseColor: string
   brushColor: string
   brushSize: number
+  onPhoneModelChange: (model: PhoneModel) => void
   onCaseColorChange: (color: string) => void
   onBrushColorChange: (color: string) => void
   onBrushSizeChange: (size: number) => void
@@ -19,9 +24,11 @@ interface PropertiesPanelProps {
 
 export function PropertiesPanel({
   currentTool,
+  phoneModel,
   caseColor,
   brushColor,
   brushSize,
+  onPhoneModelChange,
   onCaseColorChange,
   onBrushColorChange,
   onBrushSizeChange,
@@ -47,10 +54,32 @@ export function PropertiesPanel({
   }
 
   return (
-    <div className="w-full lg:w-[320px] h-auto lg:h-full bg-card border-t lg:border-l border-border p-4 flex flex-col">
-      <h2 className="text-lg font-bold mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
-        {getTitleForTool(currentTool)}
-      </h2>
+    <div className="w-full lg:w-[320px] h-auto lg:h-full bg-card border-t lg:border-l border-border p-4 flex flex-col gap-4">
+      <div>
+        <h2 className="text-lg font-bold mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+          {getTitleForTool(currentTool)}
+        </h2>
+
+        <div className="space-y-3 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="phone-model" className="text-sm font-medium">
+              Phone Model
+            </Label>
+            <Select value={phoneModel} onValueChange={(value) => onPhoneModelChange(value as PhoneModel)}>
+              <SelectTrigger id="phone-model">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PHONE_MODELS.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
       <div className="flex-1 overflow-hidden">
         {currentTool === 'color' && (

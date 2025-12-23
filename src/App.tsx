@@ -14,13 +14,15 @@ import type {
   PlacedImage, 
   Part3D, 
   Design,
-  CartItem 
+  CartItem,
+  PhoneModel 
 } from './lib/types'
 import { CASE_PRICE } from './lib/types'
 
 function App() {
   const [currentView, setCurrentView] = useState<'designer' | 'cart' | 'gallery'>('designer')
   const [currentTool, setCurrentTool] = useState<ToolMode>('select')
+  const [phoneModel, setPhoneModel] = useState<PhoneModel>('iphone-16-pro')
   const [caseColor, setCaseColor] = useState('#8B5CF6')
   const [brushColor, setBrushColor] = useState('#000000')
   const [brushSize, setBrushSize] = useState(10)
@@ -84,6 +86,7 @@ function App() {
       id: `design-${Date.now()}`,
       name,
       timestamp: Date.now(),
+      phoneModel,
       caseColor,
       strokes,
       images,
@@ -92,7 +95,7 @@ function App() {
     
     setDesigns((currentDesigns) => [...(currentDesigns || []), design])
     toast.success(`Design "${name}" saved successfully!`)
-  }, [caseColor, strokes, images, parts, setDesigns])
+  }, [phoneModel, caseColor, strokes, images, parts, setDesigns])
 
   const handleExport = useCallback(() => {
     toast.info('Preparing 3D model for download...')
@@ -107,6 +110,7 @@ function App() {
       id: `design-${Date.now()}`,
       name: `Custom Case ${new Date().toLocaleDateString()}`,
       timestamp: Date.now(),
+      phoneModel,
       caseColor,
       strokes,
       images,
@@ -129,7 +133,7 @@ function App() {
         onClick: () => toast.info(`Cart has ${currentCartLength + 1} item(s)`),
       },
     })
-  }, [caseColor, strokes, images, parts, setCart, cart])
+  }, [phoneModel, caseColor, strokes, images, parts, setCart, cart])
 
   const handleViewCart = useCallback(() => {
     setCurrentView('cart')
@@ -144,6 +148,7 @@ function App() {
   }, [])
 
   const handleLoadDesign = useCallback((design: Design) => {
+    setPhoneModel(design.phoneModel || 'iphone-16-pro')
     setCaseColor(design.caseColor)
     setStrokes(design.strokes)
     setImages(design.images)
@@ -181,6 +186,7 @@ function App() {
 
           <div className="flex-1 bg-background p-4 lg:p-8 overflow-hidden">
             <PhoneCaseCanvas
+              phoneModel={phoneModel}
               caseColor={caseColor}
               parts={parts}
               strokes={strokes}
@@ -195,9 +201,11 @@ function App() {
 
           <PropertiesPanel
             currentTool={currentTool}
+            phoneModel={phoneModel}
             caseColor={caseColor}
             brushColor={brushColor}
             brushSize={brushSize}
+            onPhoneModelChange={setPhoneModel}
             onCaseColorChange={setCaseColor}
             onBrushColorChange={setBrushColor}
             onBrushSizeChange={setBrushSize}

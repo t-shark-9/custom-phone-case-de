@@ -497,7 +497,7 @@ export function CartPage({ onBack }: CartPageProps) {
                             <div>
                               <h3 className="font-bold text-lg mb-1">{item.design.name}</h3>
                               <p className="text-sm text-muted-foreground">
-                                Custom iPhone Case
+                                {item.design.phoneModel === 'iphone-14-pro' ? 'iPhone 14 Pro' : 'iPhone 16 Pro'} Case
                               </p>
                             </div>
                             <Button

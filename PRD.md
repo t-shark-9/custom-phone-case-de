@@ -13,11 +13,11 @@ A 3D phone case customization platform where users can visually design personali
 ## Essential Features
 
 ### 3D Phone Case Viewer
-- **Functionality**: Real-time 3D visualization of iPhone case with smooth rotation, zoom, and camera controls
-- **Purpose**: Allows users to see their design from all angles and understand how it will look in reality
+- **Functionality**: Real-time 3D visualization of iPhone case with smooth rotation, zoom, camera controls, and support for multiple iPhone models (iPhone 14 Pro and iPhone 16 Pro)
+- **Purpose**: Allows users to see their design from all angles and understand how it will look in reality, with accurate dimensions for their specific phone model
 - **Trigger**: Loads automatically when entering the customizer
-- **Progression**: User enters customizer → 3D case loads with default view → User drags to rotate → User scrolls/pinches to zoom → Camera smoothly transitions
-- **Success criteria**: 60fps rendering, <100ms response to user input, smooth camera transitions
+- **Progression**: User enters customizer → Select phone model from dropdown → 3D case loads with correct dimensions for selected model → User drags to rotate → User scrolls/pinches to zoom → Camera smoothly transitions → Model info displayed on canvas
+- **Success criteria**: 60fps rendering, <100ms response to user input, smooth camera transitions, accurate model dimensions per phone type
 
 ### Surface Drawing Tool
 - **Functionality**: Freehand drawing directly on the 3D case surface with color picker and brush size controls
@@ -76,6 +76,8 @@ A 3D phone case customization platform where users can visually design personali
 - **Mobile Performance**: Reduce poly count and texture resolution on mobile devices while maintaining design fidelity
 - **Export Failures**: Provide clear error messages with retry options and alternative formats
 - **Browser Compatibility**: Fallback message for browsers without WebGL support with recommendation
+- **Model Switching with Existing Design**: When user switches phone models mid-design, preserve all design elements (colors, parts, images) and adjust canvas dimensions accordingly
+- **Legacy Designs**: Designs saved before phone model selection was added default to iPhone 16 Pro model for backwards compatibility
 
 ## Design Direction
 The design should evoke a sense of playful creativity meets modern craftsmanship - like a digital maker's studio that's approachable yet professional. It should feel tactile and inviting, encouraging experimentation while inspiring confidence in the final product quality.

@@ -202,7 +202,7 @@ export function SavedDesignsGallery({ onBack, onLoadDesign }: SavedDesignsGaller
                             {design.name}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {formatDate(design.timestamp)}
+                            {design.phoneModel === 'iphone-14-pro' ? 'iPhone 14 Pro' : 'iPhone 16 Pro'} • {formatDate(design.timestamp)}
                           </p>
                         </div>
                         

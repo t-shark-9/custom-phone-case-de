@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import type { Placed3DPart, DrawStroke } from '@/lib/types'
+import type { Placed3DPart, DrawStroke, PhoneModel } from '@/lib/types'
+import { PHONE_MODELS } from '@/lib/types'
 
 interface PhoneCaseCanvasProps {
+  phoneModel: PhoneModel
   caseColor: string
   parts: Placed3DPart[]
   strokes: DrawStroke[]
   onPartClick?: (partId: string) => void
 }
 
-export function PhoneCaseCanvas({ caseColor, parts, strokes, onPartClick }: PhoneCaseCanvasProps) {
+export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartClick }: PhoneCaseCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
@@ -19,6 +21,17 @@ export function PhoneCaseCanvas({ caseColor, parts, strokes, onPartClick }: Phon
   const caseMeshRef = useRef<THREE.Mesh | null>(null)
   const partsGroupRef = useRef<THREE.Group | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const getPhoneDimensions = (model: PhoneModel) => {
+    switch (model) {
+      case 'iphone-14-pro':
+        return { width: 3.4, height: 7.0, depth: 0.5 }
+      case 'iphone-16-pro':
+        return { width: 3.5, height: 7.2, depth: 0.48 }
+      default:
+        return { width: 3.5, height: 7.0, depth: 0.5 }
+    }
+  }
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -66,8 +79,9 @@ export function PhoneCaseCanvas({ caseColor, parts, strokes, onPartClick }: Phon
     fillLight.position.set(-5, 0, -5)
     scene.add(fillLight)
 
-    const caseGeometry = new THREE.BoxGeometry(3.5, 7, 0.5)
-    caseGeometry.translate(0, 0, 0.25)
+    const dimensions = getPhoneDimensions(phoneModel)
+    const caseGeometry = new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.depth)
+    caseGeometry.translate(0, 0, dimensions.depth / 2)
     
     const caseMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(caseColor),
@@ -80,24 +94,24 @@ export function PhoneCaseCanvas({ caseColor, parts, strokes, onPartClick }: Phon
     scene.add(caseMesh)
     caseMeshRef.current = caseMesh
 
-    const cameraHoleGeometry = new THREE.BoxGeometry(1.2, 0.6, 0.6)
+    const cameraHoleGeometry = new THREE.BoxGeometry(dimensions.width * 0.34, dimensions.height * 0.086, dimensions.depth * 1.2)
     const holeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 })
     const cameraHole = new THREE.Mesh(cameraHoleGeometry, holeMaterial)
-    cameraHole.position.set(0, 2.8, 0.25)
+    cameraHole.position.set(0, dimensions.height * 0.4, dimensions.depth / 2)
     scene.add(cameraHole)
 
-    const buttonGeometry = new THREE.BoxGeometry(0.15, 0.8, 0.3)
+    const buttonGeometry = new THREE.BoxGeometry(0.15, dimensions.height * 0.114, dimensions.depth * 0.6)
     const buttonMaterial = new THREE.MeshStandardMaterial({ 
       color: new THREE.Color(caseColor),
       roughness: 0.3,
       metalness: 0.2,
     })
     const volumeButton = new THREE.Mesh(buttonGeometry, buttonMaterial)
-    volumeButton.position.set(-1.85, 1.5, 0.25)
+    volumeButton.position.set(-(dimensions.width / 2 + 0.075), dimensions.height * 0.214, dimensions.depth / 2)
     scene.add(volumeButton)
 
     const powerButton = new THREE.Mesh(buttonGeometry.clone(), buttonMaterial.clone())
-    powerButton.position.set(1.85, 1.8, 0.25)
+    powerButton.position.set(dimensions.width / 2 + 0.075, dimensions.height * 0.257, dimensions.depth / 2)
     scene.add(powerButton)
 
     const partsGroup = new THREE.Group()
@@ -128,7 +142,7 @@ export function PhoneCaseCanvas({ caseColor, parts, strokes, onPartClick }: Phon
       renderer.dispose()
       containerRef.current?.removeChild(renderer.domElement)
     }
-  }, [])
+  }, [phoneModel])
 
   useEffect(() => {
     if (caseMeshRef.current) {
@@ -277,6 +291,16 @@ export function PhoneCaseCanvas({ caseColor, parts, strokes, onPartClick }: Phon
           <div className="text-muted-foreground">Loading 3D viewer...</div>
         </div>
       )}
+      
+      <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-4 py-2 shadow-lg">
+        <div className="text-xs font-medium text-muted-foreground">Current Model</div>
+        <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
+          {PHONE_MODELS.find(m => m.id === phoneModel)?.name}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          Using: {PHONE_MODELS.find(m => m.id === phoneModel)?.stepFile}
+        </div>
+      </div>
     </div>
   )
 }
