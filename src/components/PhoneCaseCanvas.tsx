@@ -291,6 +291,7 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
           <div className="text-muted-foreground">Loading 3D viewer...</div>
         </div>
       )}
+      <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm px-3 py-2 rounded-md shadow-md">
         <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
           {PHONE_MODELS.find(m => m.id === phoneModel)?.name}
         </div>
@@ -298,9 +299,6 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
           Using: {PHONE_MODELS.find(m => m.id === phoneModel)?.stepFile}
         </div>
       </div>
-    </div>
-  )
-}
     </div>
   )
 }
