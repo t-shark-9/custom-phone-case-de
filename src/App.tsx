@@ -6,6 +6,7 @@ import { PhoneCaseCanvas } from './components/PhoneCaseCanvas'
 import { SaveDesignDialog } from './components/SaveDesignDialog'
 import { CartPage } from './components/CartPage'
 import { SavedDesignsGallery } from './components/SavedDesignsGallery'
+import { Model3DGallery } from './components/Model3DGallery'
 import { Toaster, toast } from 'sonner'
 import type { 
   ToolMode, 
@@ -20,7 +21,7 @@ import type {
 import { CASE_PRICE } from './lib/types'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'designer' | 'cart' | 'gallery'>('designer')
+  const [currentView, setCurrentView] = useState<'designer' | 'cart' | 'gallery' | '3d-models'>('designer')
   const [currentTool, setCurrentTool] = useState<ToolMode>('select')
   const [phoneModel, setPhoneModel] = useState<PhoneModel>('iphone-16-pro')
   const [caseColor, setCaseColor] = useState('#8B5CF6')
@@ -147,6 +148,10 @@ function App() {
     setCurrentView('gallery')
   }, [])
 
+  const handleView3DModels = useCallback(() => {
+    setCurrentView('3d-models')
+  }, [])
+
   const handleLoadDesign = useCallback((design: Design) => {
     setPhoneModel(design.phoneModel || 'iphone-16-pro')
     setCaseColor(design.caseColor)
@@ -167,6 +172,18 @@ function App() {
         />
       ) : currentView === 'cart' ? (
         <CartPage onBack={handleBackToDesigner} />
+      ) : currentView === '3d-models' ? (
+        <div className="h-screen w-screen overflow-auto bg-gray-50">
+          <Model3DGallery />
+          <div className="fixed top-4 left-4">
+            <button
+              onClick={handleBackToDesigner}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+            >
+              ← Zurück zum Designer
+            </button>
+          </div>
+        </div>
       ) : (
         <div className="h-screen w-screen flex flex-col lg:flex-row overflow-hidden">
           <Toolbar
@@ -179,6 +196,7 @@ function App() {
             onAddToCart={handleAddToCart}
             onViewCart={handleViewCart}
             onViewGallery={handleViewGallery}
+            onView3DModels={handleView3DModels}
             canUndo={historyIndex > 0}
             canRedo={historyIndex < history.length - 1}
             cartItemCount={(cart || []).length}

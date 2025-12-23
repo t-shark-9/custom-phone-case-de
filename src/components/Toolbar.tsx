@@ -12,7 +12,8 @@ import {
   FloppyDisk,
   Download,
   ShoppingCart,
-  FolderOpen
+  FolderOpen,
+  CubeTransparent
 } from '@phosphor-icons/react'
 import type { ToolMode } from '@/lib/types'
 
@@ -26,6 +27,7 @@ interface ToolbarProps {
   onAddToCart: () => void
   onViewCart: () => void
   onViewGallery: () => void
+  onView3DModels?: () => void
   canUndo: boolean
   canRedo: boolean
   cartItemCount: number
@@ -41,6 +43,7 @@ export function Toolbar({
   onAddToCart,
   onViewCart,
   onViewGallery,
+  onView3DModels,
   canUndo,
   canRedo,
   cartItemCount,
@@ -138,6 +141,13 @@ export function Toolbar({
             <FolderOpen size={18} />
             <span className="ml-2">My Designs</span>
           </Button>
+
+          {onView3DModels && (
+            <Button variant="outline" onClick={onView3DModels} className="w-full">
+              <CubeTransparent size={18} />
+              <span className="ml-2">View 3D Models</span>
+            </Button>
+          )}
 
           <Button variant="outline" onClick={onExport} className="w-full">
             <Download size={18} />
