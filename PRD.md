@@ -48,11 +48,11 @@ A 3D phone case customization platform where users can visually design personali
 - **Success criteria**: Instant preview, accurate color representation, material consistency
 
 ### Design Management
-- **Functionality**: Save designs to account, load previous designs, create multiple variations
-- **Purpose**: Enables iteration and prevents lost work
-- **Trigger**: User clicks "Save Design" or "Load Design"
-- **Progression**: Click save → Enter design name → Saves to account → Access "My Designs" → Click design to load → Case state restores completely
-- **Success criteria**: Complete state persistence, thumbnail generation, quick loading
+- **Functionality**: Save designs to account, browse saved designs in a gallery view, load previous designs for editing, delete unwanted designs
+- **Purpose**: Enables iteration and prevents lost work with visual browsing of all saved creations
+- **Trigger**: User clicks "Save Design" to save, or "My Designs" to view gallery
+- **Progression**: Click save → Enter design name → Saves to account → Access "My Designs" → Browse gallery with thumbnails → Search designs by name → Click design card to load → Case state restores completely → Continue editing
+- **Success criteria**: Complete state persistence, thumbnail generation, quick loading, visual gallery interface, search functionality
 
 ### Shopping Cart & Checkout
 - **Functionality**: Add customized case to cart, review order, proceed to purchase with full checkout flow

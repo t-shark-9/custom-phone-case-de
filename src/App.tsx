@@ -5,6 +5,7 @@ import { PropertiesPanel } from './components/PropertiesPanel'
 import { PhoneCaseCanvas } from './components/PhoneCaseCanvas'
 import { SaveDesignDialog } from './components/SaveDesignDialog'
 import { CartPage } from './components/CartPage'
+import { SavedDesignsGallery } from './components/SavedDesignsGallery'
 import { Toaster, toast } from 'sonner'
 import type { 
   ToolMode, 
@@ -18,7 +19,7 @@ import type {
 import { CASE_PRICE } from './lib/types'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'designer' | 'cart'>('designer')
+  const [currentView, setCurrentView] = useState<'designer' | 'cart' | 'gallery'>('designer')
   const [currentTool, setCurrentTool] = useState<ToolMode>('select')
   const [caseColor, setCaseColor] = useState('#8B5CF6')
   const [brushColor, setBrushColor] = useState('#000000')
@@ -138,11 +139,28 @@ function App() {
     setCurrentView('designer')
   }, [])
 
+  const handleViewGallery = useCallback(() => {
+    setCurrentView('gallery')
+  }, [])
+
+  const handleLoadDesign = useCallback((design: Design) => {
+    setCaseColor(design.caseColor)
+    setStrokes(design.strokes)
+    setImages(design.images)
+    setParts(design.parts)
+    setCurrentView('designer')
+  }, [])
+
   return (
     <>
       <Toaster position="top-right" richColors />
       
-      {currentView === 'cart' ? (
+      {currentView === 'gallery' ? (
+        <SavedDesignsGallery 
+          onBack={handleBackToDesigner} 
+          onLoadDesign={handleLoadDesign}
+        />
+      ) : currentView === 'cart' ? (
         <CartPage onBack={handleBackToDesigner} />
       ) : (
         <div className="h-screen w-screen flex flex-col lg:flex-row overflow-hidden">
@@ -155,6 +173,7 @@ function App() {
             onExport={handleExport}
             onAddToCart={handleAddToCart}
             onViewCart={handleViewCart}
+            onViewGallery={handleViewGallery}
             canUndo={historyIndex > 0}
             canRedo={historyIndex < history.length - 1}
             cartItemCount={(cart || []).length}
