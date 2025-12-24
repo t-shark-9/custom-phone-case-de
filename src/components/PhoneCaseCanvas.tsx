@@ -5,6 +5,10 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import type { Placed3DPart, DrawStroke, PhoneModel } from '@/lib/types'
 import { PHONE_MODELS } from '@/lib/types'
+import { Button } from '@/components/ui/button'
+import { Hand, ArrowsOutCardinal, ArrowsClockwise, ArrowsOut, Lock, LockOpen } from '@phosphor-icons/react'
+
+type InteractionMode = 'camera' | 'select' | 'move' | 'rotate' | 'scale'
 
 interface PhoneCaseCanvasProps {
   phoneModel: PhoneModel
@@ -30,7 +34,8 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedPartId, setSelectedPartId] = useState<string | null>(null)
-  const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate')
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>('camera')
+  const [orbitLocked, setOrbitLocked] = useState(false)
 
   const getModelPath = (model: PhoneModel): string => {
     switch (model) {
@@ -76,6 +81,11 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
     controls.minDistance = 80
     controls.maxDistance = 300
     controls.enablePan = true
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.PAN
+    }
     controlsRef.current = controls
 
     const transformControls = new TransformControls(camera, renderer.domElement)
@@ -97,6 +107,7 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
 
     const handleClick = (event: MouseEvent) => {
       if (!containerRef.current || !cameraRef.current || !partsGroupRef.current) return
+      if (interactionMode === 'camera') return
 
       const rect = containerRef.current.getBoundingClientRect()
       mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
@@ -105,48 +116,35 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
       raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current)
       const intersects = raycasterRef.current.intersectObjects(partsGroupRef.current.children, false)
 
-      if (intersects.length > 0) {
+      if (intersects.length > 0 && interactionMode === 'select') {
         const clickedMesh = intersects[0].object as THREE.Mesh
         const partId = Array.from(partMeshesRef.current.entries()).find(([_, mesh]) => mesh === clickedMesh)?.[0]
         
         if (partId) {
           setSelectedPartId(partId)
+          setInteractionMode('move')
+          transformControls.setMode('translate')
           transformControls.attach(clickedMesh)
           onPartClick?.(partId)
         }
-      } else {
+      } else if (interactionMode === 'select') {
         setSelectedPartId(null)
         transformControls.detach()
       }
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!transformControls.object) return
-
       switch (event.key) {
-        case 'g':
-        case 'G':
-          setTransformMode('translate')
-          transformControls.setMode('translate')
-          break
-        case 'r':
-        case 'R':
-          setTransformMode('rotate')
-          transformControls.setMode('rotate')
-          break
-        case 's':
-        case 'S':
-          setTransformMode('scale')
-          transformControls.setMode('scale')
-          break
         case 'Escape':
           setSelectedPartId(null)
+          setInteractionMode('camera')
           transformControls.detach()
           break
         case 'Delete':
         case 'Backspace':
           if (selectedPartId) {
             setSelectedPartId(null)
+            setInteractionMode('camera')
             transformControls.detach()
           }
           break
@@ -244,6 +242,26 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
       }
     }
   }, [phoneModel])
+
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.enabled = !orbitLocked && interactionMode === 'camera'
+    }
+  }, [orbitLocked, interactionMode])
+
+  useEffect(() => {
+    if (transformControlsRef.current && selectedPartId) {
+      const mesh = partMeshesRef.current.get(selectedPartId)
+      if (mesh && interactionMode !== 'camera' && interactionMode !== 'select') {
+        const modeMap = {
+          move: 'translate',
+          rotate: 'rotate',
+          scale: 'scale'
+        } as const
+        transformControlsRef.current.setMode(modeMap[interactionMode])
+      }
+    }
+  }, [interactionMode, selectedPartId])
 
   useEffect(() => {
     if (caseMeshRef.current) {
@@ -424,19 +442,112 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
             </div>
           </div>
           
-          <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border border-border">
+          <div className="absolute top-4 right-4 flex flex-col gap-2">
+            <div className="bg-card/90 backdrop-blur-sm rounded-lg shadow-lg border border-border overflow-hidden">
+              <div className="px-3 py-2 border-b border-border">
+                <div className="text-xs font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+                  Interaction Mode
+                </div>
+              </div>
+              <div className="p-2 flex flex-col gap-1">
+                <Button
+                  size="sm"
+                  variant={interactionMode === 'camera' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setInteractionMode('camera')
+                    setSelectedPartId(null)
+                    transformControlsRef.current?.detach()
+                  }}
+                  className="w-full justify-start gap-2"
+                >
+                  <Hand size={16} />
+                  <span className="text-xs">Camera (Drag to rotate)</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant={interactionMode === 'select' ? 'default' : 'outline'}
+                  onClick={() => setInteractionMode('select')}
+                  className="w-full justify-start gap-2"
+                >
+                  <ArrowsOutCardinal size={16} />
+                  <span className="text-xs">Select Part</span>
+                </Button>
+                {selectedPartId && (
+                  <>
+                    <div className="h-px bg-border my-1" />
+                    <Button
+                      size="sm"
+                      variant={interactionMode === 'move' ? 'default' : 'outline'}
+                      onClick={() => setInteractionMode('move')}
+                      className="w-full justify-start gap-2"
+                    >
+                      <ArrowsOutCardinal size={16} />
+                      <span className="text-xs">Move</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={interactionMode === 'rotate' ? 'default' : 'outline'}
+                      onClick={() => setInteractionMode('rotate')}
+                      className="w-full justify-start gap-2"
+                    >
+                      <ArrowsClockwise size={16} />
+                      <span className="text-xs">Rotate</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={interactionMode === 'scale' ? 'default' : 'outline'}
+                      onClick={() => setInteractionMode('scale')}
+                      className="w-full justify-start gap-2"
+                    >
+                      <ArrowsOut size={16} />
+                      <span className="text-xs">Scale</span>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <Button
+              size="sm"
+              variant={orbitLocked ? 'default' : 'outline'}
+              onClick={() => setOrbitLocked(!orbitLocked)}
+              className="gap-2"
+            >
+              {orbitLocked ? <Lock size={16} /> : <LockOpen size={16} />}
+              <span className="text-xs">{orbitLocked ? 'Unlock' : 'Lock'} Camera</span>
+            </Button>
+          </div>
+          
+          <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border border-border max-w-xs">
             <div className="text-xs font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
-              Controls
+              Tips
             </div>
             <div className="text-xs text-muted-foreground space-y-1">
-              <div><span className="font-medium">Click</span> part to select</div>
-              <div><span className="font-medium">G</span> Move | <span className="font-medium">R</span> Rotate | <span className="font-medium">S</span> Scale</div>
-              <div><span className="font-medium">ESC</span> Deselect | <span className="font-medium">Del</span> Remove</div>
+              {interactionMode === 'camera' && (
+                <>
+                  <div>• <span className="font-medium">Left-drag</span> to rotate camera</div>
+                  <div>• <span className="font-medium">Scroll</span> to zoom in/out</div>
+                  <div>• <span className="font-medium">Right-drag</span> to pan</div>
+                </>
+              )}
+              {interactionMode === 'select' && (
+                <>
+                  <div>• <span className="font-medium">Click</span> a part to select it</div>
+                  <div>• <span className="font-medium">ESC</span> to deselect</div>
+                </>
+              )}
+              {(interactionMode === 'move' || interactionMode === 'rotate' || interactionMode === 'scale') && (
+                <>
+                  <div>• <span className="font-medium">Drag</span> the handles to transform</div>
+                  <div>• <span className="font-medium">ESC</span> to return to camera mode</div>
+                  <div>• Switch modes using buttons above</div>
+                </>
+              )}
             </div>
             {selectedPartId && (
               <div className="mt-2 pt-2 border-t border-border">
-                <div className="text-xs font-medium text-primary">
-                  Mode: {transformMode.toUpperCase()}
+                <div className="text-xs font-medium text-accent">
+                  Part selected - Use mode buttons →
                 </div>
               </div>
             )}

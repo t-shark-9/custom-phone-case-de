@@ -13,11 +13,11 @@ A 3D phone case customization platform where users can visually design personali
 ## Essential Features
 
 ### 3D Phone Case Viewer
-- **Functionality**: Real-time 3D visualization of iPhone case with smooth rotation, zoom, camera controls, and support for multiple iPhone models (iPhone 14 Pro and iPhone 16 Pro)
-- **Purpose**: Allows users to see their design from all angles and understand how it will look in reality, with accurate dimensions for their specific phone model
+- **Functionality**: Real-time 3D visualization of iPhone case with smooth rotation, zoom, camera controls, support for multiple iPhone models (iPhone 14 Pro and iPhone 16 Pro), and dedicated interaction modes that separate camera navigation from object manipulation
+- **Purpose**: Allows users to see their design from all angles and understand how it will look in reality, with accurate dimensions for their specific phone model, without the frustration of camera controls interfering with part editing
 - **Trigger**: Loads automatically when entering the customizer
-- **Progression**: User enters customizer → Select phone model from dropdown → 3D case loads with correct dimensions for selected model → User drags to rotate → User scrolls/pinches to zoom → Camera smoothly transitions → Model info displayed on canvas
-- **Success criteria**: 60fps rendering, <100ms response to user input, smooth camera transitions, accurate model dimensions per phone type
+- **Progression**: User enters customizer → Select phone model from dropdown → 3D case loads with correct dimensions for selected model → User uses "Camera" mode button to rotate/zoom view → Switches to "Select Part" mode to click parts without moving camera → Selected part shows Move/Rotate/Scale mode buttons → Camera lock button prevents accidental rotations → Model info displayed on canvas
+- **Success criteria**: 60fps rendering, <100ms response to user input, smooth camera transitions, accurate model dimensions per phone type, clear separation between camera navigation and part manipulation, no conflicts between interaction modes
 
 ### Surface Drawing Tool
 - **Functionality**: Freehand drawing directly on the 3D case surface with color picker and brush size controls
@@ -34,11 +34,11 @@ A 3D phone case customization platform where users can visually design personali
 - **Success criteria**: Supports common formats, maintains aspect ratio, proper UV mapping
 
 ### 3D Parts Library & Snapping
-- **Functionality**: Browse library of 3D decorative parts (hearts, stars, flowers, geometric shapes) and snap them onto case
-- **Purpose**: Adds dimensional, tactile elements to designs for visual interest
+- **Functionality**: Browse library of 3D decorative parts (hearts, stars, flowers, geometric shapes) and snap them onto case with intuitive mode-based controls for moving, rotating, and scaling
+- **Purpose**: Adds dimensional, tactile elements to designs for visual interest with clear, non-conflicting controls
 - **Trigger**: User opens parts panel
-- **Progression**: Open parts library → Browse categories → Click part to select → Click on case to place → Part snaps to surface with correct orientation → Drag to reposition → Can duplicate/delete
-- **Success criteria**: Smooth snapping, correct surface normals, no z-fighting, intuitive positioning
+- **Progression**: Open parts library → Browse categories → Click part to select → Part appears on case → Switch to "Select Part" mode → Click part to select it → Use "Move" mode button to reposition → Use "Rotate" mode button to rotate → Use "Scale" mode button to resize → Switch back to "Camera" mode to view from different angles → ESC to deselect → Can duplicate/delete
+- **Success criteria**: Smooth mode switching, no camera/manipulation conflicts, clear visual feedback for active mode, correct surface normals, no z-fighting, intuitive button-based mode selection
 
 ### Color Customization
 - **Functionality**: Change base case color with preset palette and custom color picker
@@ -78,6 +78,9 @@ A 3D phone case customization platform where users can visually design personali
 - **Browser Compatibility**: Fallback message for browsers without WebGL support with recommendation
 - **Model Switching with Existing Design**: When user switches phone models mid-design, preserve all design elements (colors, parts, images) and adjust canvas dimensions accordingly
 - **Legacy Designs**: Designs saved before phone model selection was added default to iPhone 16 Pro model for backwards compatibility
+- **Mode Confusion**: Clear visual indicators and button labels prevent users from mixing up camera vs part manipulation modes, with contextual tips updating based on active mode
+- **Accidental Camera Movement**: Camera lock button prevents unintended view changes during precise part editing
+- **Part Selection During Camera Mode**: Clicking parts in camera mode does nothing to prevent accidental selections while navigating the view
 
 ## Design Direction
 The design should evoke a sense of playful creativity meets modern craftsmanship - like a digital maker's studio that's approachable yet professional. It should feel tactile and inviting, encouraging experimentation while inspiring confidence in the final product quality.
