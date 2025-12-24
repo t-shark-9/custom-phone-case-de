@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import type { Placed3DPart, DrawStroke, PhoneModel } from '@/lib/types'
 import { PHONE_MODELS } from '@/lib/types'
@@ -11,18 +12,25 @@ interface PhoneCaseCanvasProps {
   parts: Placed3DPart[]
   strokes: DrawStroke[]
   onPartClick?: (partId: string) => void
+  onPartUpdate?: (partId: string, updates: Partial<Placed3DPart>) => void
 }
 
-export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartClick }: PhoneCaseCanvasProps) {
+export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartClick, onPartUpdate }: PhoneCaseCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const controlsRef = useRef<OrbitControls | null>(null)
+  const transformControlsRef = useRef<TransformControls | null>(null)
   const caseMeshRef = useRef<THREE.Mesh | null>(null)
   const partsGroupRef = useRef<THREE.Group | null>(null)
+  const partMeshesRef = useRef<Map<string, THREE.Mesh>>(new Map())
+  const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster())
+  const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2())
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [selectedPartId, setSelectedPartId] = useState<string | null>(null)
+  const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate')
 
   const getModelPath = (model: PhoneModel): string => {
     switch (model) {
@@ -69,6 +77,84 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
     controls.maxDistance = 300
     controls.enablePan = true
     controlsRef.current = controls
+
+    const transformControls = new TransformControls(camera, renderer.domElement)
+    transformControls.addEventListener('dragging-changed', (event) => {
+      controls.enabled = !event.value
+    })
+    transformControls.addEventListener('change', () => {
+      const attachedObject = transformControls.object
+      if (selectedPartId && attachedObject) {
+        onPartUpdate?.(selectedPartId, {
+          position: { x: attachedObject.position.x, y: attachedObject.position.y, z: attachedObject.position.z },
+          rotation: { x: attachedObject.rotation.x, y: attachedObject.rotation.y, z: attachedObject.rotation.z },
+          scale: attachedObject.scale.x,
+        })
+      }
+    })
+    scene.add(transformControls as any)
+    transformControlsRef.current = transformControls
+
+    const handleClick = (event: MouseEvent) => {
+      if (!containerRef.current || !cameraRef.current || !partsGroupRef.current) return
+
+      const rect = containerRef.current.getBoundingClientRect()
+      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+      raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current)
+      const intersects = raycasterRef.current.intersectObjects(partsGroupRef.current.children, false)
+
+      if (intersects.length > 0) {
+        const clickedMesh = intersects[0].object as THREE.Mesh
+        const partId = Array.from(partMeshesRef.current.entries()).find(([_, mesh]) => mesh === clickedMesh)?.[0]
+        
+        if (partId) {
+          setSelectedPartId(partId)
+          transformControls.attach(clickedMesh)
+          onPartClick?.(partId)
+        }
+      } else {
+        setSelectedPartId(null)
+        transformControls.detach()
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!transformControls.object) return
+
+      switch (event.key) {
+        case 'g':
+        case 'G':
+          setTransformMode('translate')
+          transformControls.setMode('translate')
+          break
+        case 'r':
+        case 'R':
+          setTransformMode('rotate')
+          transformControls.setMode('rotate')
+          break
+        case 's':
+        case 'S':
+          setTransformMode('scale')
+          transformControls.setMode('scale')
+          break
+        case 'Escape':
+          setSelectedPartId(null)
+          transformControls.detach()
+          break
+        case 'Delete':
+        case 'Backspace':
+          if (selectedPartId) {
+            setSelectedPartId(null)
+            transformControls.detach()
+          }
+          break
+      }
+    }
+
+    renderer.domElement.addEventListener('click', handleClick)
+    window.addEventListener('keydown', handleKeyDown)
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7)
     scene.add(ambientLight)
@@ -148,7 +234,10 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      window.removeEventListener('keydown', handleKeyDown)
+      renderer.domElement.removeEventListener('click', handleClick)
       cancelAnimationFrame(animationId)
+      transformControls.dispose()
       renderer.dispose()
       if (containerRef.current && renderer.domElement && containerRef.current.contains(renderer.domElement)) {
         containerRef.current.removeChild(renderer.domElement)
@@ -169,14 +258,22 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
     while (partsGroupRef.current.children.length > 0) {
       partsGroupRef.current.remove(partsGroupRef.current.children[0])
     }
+    partMeshesRef.current.clear()
 
     parts.forEach((part) => {
       const partMesh = createPartMesh(part)
       if (partMesh) {
+        partMesh.userData.partId = part.id
         partsGroupRef.current?.add(partMesh)
+        partMeshesRef.current.set(part.id, partMesh)
       }
     })
-  }, [parts])
+
+    if (selectedPartId && !partMeshesRef.current.has(selectedPartId)) {
+      setSelectedPartId(null)
+      transformControlsRef.current?.detach()
+    }
+  }, [parts, selectedPartId])
 
   const createPartMesh = (part: Placed3DPart): THREE.Mesh | null => {
     let geometry: THREE.BufferGeometry
@@ -192,19 +289,19 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
         geometry = createFlowerGeometry()
         break
       case 'circle':
-        geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 32)
+        geometry = new THREE.CylinderGeometry(5, 5, 2, 32)
         break
       case 'square':
-        geometry = new THREE.BoxGeometry(0.5, 0.5, 0.2)
+        geometry = new THREE.BoxGeometry(8, 8, 2)
         break
       case 'triangle':
-        geometry = new THREE.ConeGeometry(0.3, 0.5, 3)
+        geometry = new THREE.ConeGeometry(5, 8, 3)
         break
       case 'hexagon':
-        geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 6)
+        geometry = new THREE.CylinderGeometry(5, 5, 2, 6)
         break
       default:
-        geometry = new THREE.SphereGeometry(0.25, 16, 16)
+        geometry = new THREE.SphereGeometry(4, 16, 16)
     }
 
     const material = new THREE.MeshStandardMaterial({
@@ -225,21 +322,22 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
   const createHeartGeometry = (): THREE.BufferGeometry => {
     const shape = new THREE.Shape()
     
-    shape.moveTo(0, 0.25)
-    shape.bezierCurveTo(0, 0.4, -0.15, 0.5, -0.25, 0.5)
-    shape.bezierCurveTo(-0.55, 0.5, -0.55, 0.1, -0.55, 0.1)
-    shape.bezierCurveTo(-0.55, -0.1, -0.35, -0.25, -0.15, -0.45)
-    shape.lineTo(0, -0.6)
-    shape.lineTo(0.15, -0.45)
-    shape.bezierCurveTo(0.35, -0.25, 0.55, -0.1, 0.55, 0.1)
-    shape.bezierCurveTo(0.55, 0.1, 0.55, 0.5, 0.25, 0.5)
-    shape.bezierCurveTo(0.15, 0.5, 0, 0.4, 0, 0.25)
+    const scale = 10
+    shape.moveTo(0, 0.25 * scale)
+    shape.bezierCurveTo(0, 0.4 * scale, -0.15 * scale, 0.5 * scale, -0.25 * scale, 0.5 * scale)
+    shape.bezierCurveTo(-0.55 * scale, 0.5 * scale, -0.55 * scale, 0.1 * scale, -0.55 * scale, 0.1 * scale)
+    shape.bezierCurveTo(-0.55 * scale, -0.1 * scale, -0.35 * scale, -0.25 * scale, -0.15 * scale, -0.45 * scale)
+    shape.lineTo(0, -0.6 * scale)
+    shape.lineTo(0.15 * scale, -0.45 * scale)
+    shape.bezierCurveTo(0.35 * scale, -0.25 * scale, 0.55 * scale, -0.1 * scale, 0.55 * scale, 0.1 * scale)
+    shape.bezierCurveTo(0.55 * scale, 0.1 * scale, 0.55 * scale, 0.5 * scale, 0.25 * scale, 0.5 * scale)
+    shape.bezierCurveTo(0.15 * scale, 0.5 * scale, 0, 0.4 * scale, 0, 0.25 * scale)
 
     const extrudeSettings = {
-      depth: 0.2,
+      depth: 2,
       bevelEnabled: true,
-      bevelThickness: 0.05,
-      bevelSize: 0.05,
+      bevelThickness: 0.5,
+      bevelSize: 0.5,
       bevelSegments: 3,
     }
 
@@ -248,8 +346,8 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
 
   const createStarGeometry = (): THREE.BufferGeometry => {
     const shape = new THREE.Shape()
-    const outerRadius = 0.4
-    const innerRadius = 0.2
+    const outerRadius = 6
+    const innerRadius = 3
     const points = 5
 
     for (let i = 0; i < points * 2; i++) {
@@ -267,10 +365,10 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
     shape.closePath()
 
     const extrudeSettings = {
-      depth: 0.15,
+      depth: 2,
       bevelEnabled: true,
-      bevelThickness: 0.03,
-      bevelSize: 0.03,
+      bevelThickness: 0.4,
+      bevelSize: 0.4,
       bevelSegments: 2,
     }
 
@@ -279,21 +377,21 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
 
   const createFlowerGeometry = (): THREE.BufferGeometry => {
     const group = new THREE.Group()
-    const petalGeometry = new THREE.SphereGeometry(0.15, 16, 16)
-    const centerGeometry = new THREE.SphereGeometry(0.1, 16, 16)
+    const petalGeometry = new THREE.SphereGeometry(2.5, 16, 16)
+    const centerGeometry = new THREE.SphereGeometry(1.5, 16, 16)
 
     const petalCount = 6
     for (let i = 0; i < petalCount; i++) {
       const angle = (i / petalCount) * Math.PI * 2
       const petal = new THREE.Mesh(petalGeometry)
-      petal.position.set(Math.cos(angle) * 0.2, Math.sin(angle) * 0.2, 0)
+      petal.position.set(Math.cos(angle) * 3, Math.sin(angle) * 3, 0)
       group.add(petal)
     }
 
     const center = new THREE.Mesh(centerGeometry)
     group.add(center)
 
-    return new THREE.BoxGeometry(0.4, 0.4, 0.2)
+    return new THREE.BoxGeometry(6, 6, 2)
   }
 
   return (
@@ -316,14 +414,34 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
         </div>
       )}
       {!isLoading && !loadError && (
-        <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border border-border">
-          <div className="text-sm font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
-            {PHONE_MODELS.find(m => m.id === phoneModel)?.name}
+        <>
+          <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border border-border">
+            <div className="text-sm font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+              {PHONE_MODELS.find(m => m.id === phoneModel)?.name}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Using STL Model ✓
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Using STL Model ✓
+          
+          <div className="absolute bottom-4 left-4 bg-card/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border border-border">
+            <div className="text-xs font-bold text-foreground mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+              Controls
+            </div>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div><span className="font-medium">Click</span> part to select</div>
+              <div><span className="font-medium">G</span> Move | <span className="font-medium">R</span> Rotate | <span className="font-medium">S</span> Scale</div>
+              <div><span className="font-medium">ESC</span> Deselect | <span className="font-medium">Del</span> Remove</div>
+            </div>
+            {selectedPartId && (
+              <div className="mt-2 pt-2 border-t border-border">
+                <div className="text-xs font-medium text-primary">
+                  Mode: {transformMode.toUpperCase()}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </>
       )}
     </div>
   )

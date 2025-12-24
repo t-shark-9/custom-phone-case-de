@@ -46,7 +46,7 @@ function App() {
     const newPart: Placed3DPart = {
       id: `part-${Date.now()}-${Math.random()}`,
       partId: part.id,
-      position: { x: 0, y: 0, z: 0.6 },
+      position: { x: 0, y: 0, z: 15 },
       rotation: { x: 0, y: 0, z: 0 },
       scale: 1,
       color: brushColor,
@@ -55,6 +55,14 @@ function App() {
     setParts((currentParts) => [...currentParts, newPart])
     toast.success(`${part.name} added to case`)
   }, [brushColor])
+
+  const handlePartUpdate = useCallback((partId: string, updates: Partial<Placed3DPart>) => {
+    setParts((currentParts) => 
+      currentParts.map(part => 
+        part.id === partId ? { ...part, ...updates } : part
+      )
+    )
+  }, [])
 
   const handleImageUpload = useCallback((imageUrl: string) => {
     const newImage: PlacedImage = {
@@ -211,9 +219,10 @@ function App() {
               onPartClick={(partId) => {
                 const part = parts.find(p => p.id === partId)
                 if (part) {
-                  toast.info('Part selected')
+                  toast.info('Part selected - Use G/R/S to move/rotate/scale')
                 }
               }}
+              onPartUpdate={handlePartUpdate}
             />
           </div>
 
