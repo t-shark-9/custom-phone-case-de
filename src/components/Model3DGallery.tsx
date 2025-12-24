@@ -1,5 +1,5 @@
-import { Model3DViewer } from './components/Model3DViewer';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
+import { Model3DViewer } from './Model3DViewer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 export function Model3DGallery() {
   return (
