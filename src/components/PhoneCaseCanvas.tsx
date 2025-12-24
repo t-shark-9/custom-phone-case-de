@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import type { Placed3DPart, DrawStroke, PhoneModel } from '@/lib/types'
 import { PHONE_MODELS } from '@/lib/types'
 
@@ -21,20 +22,24 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
   const caseMeshRef = useRef<THREE.Mesh | null>(null)
   const partsGroupRef = useRef<THREE.Group | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const getPhoneDimensions = (model: PhoneModel) => {
+  const getModelPath = (model: PhoneModel): string => {
     switch (model) {
       case 'iphone-14-pro':
-        return { width: 3.4, height: 7.0, depth: 0.5 }
+        return '/models/iphone_14_pro.stl'
       case 'iphone-16-pro':
-        return { width: 3.5, height: 7.2, depth: 0.48 }
+        return '/models/iphone_16_pro.stl'
       default:
-        return { width: 3.5, height: 7.0, depth: 0.5 }
+        return '/models/iphone_16_pro.stl'
     }
   }
 
   useEffect(() => {
     if (!containerRef.current) return
+
+    setIsLoading(true)
+    setLoadError(null)
 
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0xf5f3ff)
@@ -46,7 +51,7 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
       0.1,
       1000
     )
-    camera.position.set(0, 0, 8)
+    camera.position.set(0, 0, 150)
     cameraRef.current = camera
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -60,65 +65,68 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.05
-    controls.minDistance = 4
-    controls.maxDistance = 12
-    controls.enablePan = false
+    controls.minDistance = 80
+    controls.maxDistance = 300
+    controls.enablePan = true
     controlsRef.current = controls
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7)
     scene.add(ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
     directionalLight.position.set(5, 5, 5)
     directionalLight.castShadow = true
     directionalLight.shadow.mapSize.width = 2048
     directionalLight.shadow.mapSize.height = 2048
     scene.add(directionalLight)
 
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.3)
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.5)
     fillLight.position.set(-5, 0, -5)
     scene.add(fillLight)
 
-    const dimensions = getPhoneDimensions(phoneModel)
-    const caseGeometry = new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.depth)
-    caseGeometry.translate(0, 0, dimensions.depth / 2)
-    
-    const caseMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(caseColor),
-      roughness: 0.4,
-      metalness: 0.1,
-    })
-    const caseMesh = new THREE.Mesh(caseGeometry, caseMaterial)
-    caseMesh.castShadow = true
-    caseMesh.receiveShadow = true
-    scene.add(caseMesh)
-    caseMeshRef.current = caseMesh
-
-    const cameraHoleGeometry = new THREE.BoxGeometry(dimensions.width * 0.34, dimensions.height * 0.086, dimensions.depth * 1.2)
-    const holeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 })
-    const cameraHole = new THREE.Mesh(cameraHoleGeometry, holeMaterial)
-    cameraHole.position.set(0, dimensions.height * 0.4, dimensions.depth / 2)
-    scene.add(cameraHole)
-
-    const buttonGeometry = new THREE.BoxGeometry(0.15, dimensions.height * 0.114, dimensions.depth * 0.6)
-    const buttonMaterial = new THREE.MeshStandardMaterial({ 
-      color: new THREE.Color(caseColor),
-      roughness: 0.3,
-      metalness: 0.2,
-    })
-    const volumeButton = new THREE.Mesh(buttonGeometry, buttonMaterial)
-    volumeButton.position.set(-(dimensions.width / 2 + 0.075), dimensions.height * 0.214, dimensions.depth / 2)
-    scene.add(volumeButton)
-
-    const powerButton = new THREE.Mesh(buttonGeometry.clone(), buttonMaterial.clone())
-    powerButton.position.set(dimensions.width / 2 + 0.075, dimensions.height * 0.257, dimensions.depth / 2)
-    scene.add(powerButton)
+    const backLight = new THREE.DirectionalLight(0xffffff, 0.3)
+    backLight.position.set(0, -5, -5)
+    scene.add(backLight)
 
     const partsGroup = new THREE.Group()
     scene.add(partsGroup)
     partsGroupRef.current = partsGroup
 
-    setIsLoading(false)
+    const loader = new STLLoader()
+    const modelPath = getModelPath(phoneModel)
+
+    loader.load(
+      modelPath,
+      (geometry) => {
+        geometry.center()
+        geometry.computeVertexNormals()
+
+        const caseMaterial = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(caseColor),
+          roughness: 0.4,
+          metalness: 0.1,
+          side: THREE.DoubleSide,
+        })
+
+        const caseMesh = new THREE.Mesh(geometry, caseMaterial)
+        caseMesh.castShadow = true
+        caseMesh.receiveShadow = true
+        
+        scene.add(caseMesh)
+        caseMeshRef.current = caseMesh
+
+        setIsLoading(false)
+      },
+      (progress) => {
+        const percentComplete = (progress.loaded / progress.total) * 100
+        console.log(`Loading model: ${percentComplete.toFixed(0)}%`)
+      },
+      (error) => {
+        console.error('Error loading STL model:', error)
+        setLoadError(`Failed to load ${PHONE_MODELS.find(m => m.id === phoneModel)?.name} model`)
+        setIsLoading(false)
+      }
+    )
 
     const handleResize = () => {
       if (!containerRef.current) return
@@ -130,8 +138,9 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
 
     window.addEventListener('resize', handleResize)
 
+    let animationId: number
     const animate = () => {
-      requestAnimationFrame(animate)
+      animationId = requestAnimationFrame(animate)
       controls.update()
       renderer.render(scene, camera)
     }
@@ -139,8 +148,11 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      cancelAnimationFrame(animationId)
       renderer.dispose()
-      containerRef.current?.removeChild(renderer.domElement)
+      if (containerRef.current && renderer.domElement && containerRef.current.contains(renderer.domElement)) {
+        containerRef.current.removeChild(renderer.domElement)
+      }
     }
   }, [phoneModel])
 
@@ -287,18 +299,32 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
   return (
     <div ref={containerRef} className="w-full h-full relative">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-          <div className="text-muted-foreground">Loading 3D viewer...</div>
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="text-foreground font-medium">Loading {PHONE_MODELS.find(m => m.id === phoneModel)?.name}...</div>
+          </div>
         </div>
       )}
-      <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm px-3 py-2 rounded-md shadow-md">
-        <div className="text-sm font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
-          {PHONE_MODELS.find(m => m.id === phoneModel)?.name}
+      {loadError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+          <div className="flex flex-col items-center gap-3 max-w-md text-center">
+            <div className="text-destructive text-4xl">⚠️</div>
+            <div className="text-foreground font-medium">{loadError}</div>
+            <div className="text-sm text-muted-foreground">Please try refreshing the page</div>
+          </div>
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          Using: {PHONE_MODELS.find(m => m.id === phoneModel)?.stepFile}
+      )}
+      {!isLoading && !loadError && (
+        <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border border-border">
+          <div className="text-sm font-bold text-foreground" style={{ fontFamily: 'var(--font-heading)' }}>
+            {PHONE_MODELS.find(m => m.id === phoneModel)?.name}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Using STL Model ✓
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

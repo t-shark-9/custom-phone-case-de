@@ -3,8 +3,8 @@ export type ToolMode = 'select' | 'draw' | 'image' | 'parts' | 'color'
 export type PhoneModel = 'iphone-14-pro' | 'iphone-16-pro'
 
 export const PHONE_MODELS = [
-  { id: 'iphone-14-pro' as const, name: 'iPhone 14 Pro', stepFile: 'Iphone 14 Pro Phone case v7.step' },
-  { id: 'iphone-16-pro' as const, name: 'iPhone 16 Pro', stepFile: 'iPhone 16 Pro case .step' },
+  { id: 'iphone-14-pro' as const, name: 'iPhone 14 Pro', stlFile: 'iphone_14_pro.stl' },
+  { id: 'iphone-16-pro' as const, name: 'iPhone 16 Pro', stlFile: 'iphone_16_pro.stl' },
 ]
 
 export interface DrawStroke {
