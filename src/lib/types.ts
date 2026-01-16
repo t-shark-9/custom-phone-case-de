@@ -811,10 +811,10 @@ export const PHONE_MODELS: PhoneModelSpec[] = [
   },
 ]
 
-// Filter to only show older/supported phones (iPhone 13, 14, SE, Samsung)
-const ENABLED_SERIES = ['iPhone 13', 'iPhone 14', 'iPhone SE', 'Samsung Galaxy S']
+// Filter to only show phones with original STEP models
+const ENABLED_MODELS = ['iphone-14-pro', 'iphone-16-pro']
 export const ENABLED_PHONE_MODELS = PHONE_MODELS.filter(m => 
-  ENABLED_SERIES.includes(m.series)
+  ENABLED_MODELS.includes(m.id)
 )
 
 // Helper function to get phone model by ID

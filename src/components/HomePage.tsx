@@ -14,7 +14,7 @@ interface HomePageProps {
 }
 
 // Featured products (shown prominently)
-const FEATURED_MODELS: PhoneModel[] = ['iphone-14-pro-max', 'iphone-14-pro', 'iphone-14', 'iphone-13-pro-max']
+const FEATURED_MODELS: PhoneModel[] = ['iphone-14-pro', 'iphone-16-pro']
 
 const FEATURES = [
   {
