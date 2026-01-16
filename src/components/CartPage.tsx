@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useKV } from '@github/spark/hooks'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -20,12 +19,36 @@ import { toast } from 'sonner'
 import type { CartItem } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
 
+// Custom hook for local storage
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key)
+      return item ? JSON.parse(item) : initialValue
+    } catch {
+      return initialValue
+    }
+  })
+
+  const setValue = (value: T | ((prev: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value
+      setStoredValue(valueToStore)
+      window.localStorage.setItem(key, JSON.stringify(valueToStore))
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  return [storedValue, setValue]
+}
+
 interface CartPageProps {
   onBack: () => void
 }
 
 export function CartPage({ onBack }: CartPageProps) {
-  const [cart, setCart] = useKV<CartItem[]>('shopping-cart', [])
+  const [cart, setCart] = useLocalStorage<CartItem[]>('shopping-cart', [])
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'shipping' | 'payment' | 'confirmation'>('cart')
   
   const [shippingInfo, setShippingInfo] = useState({

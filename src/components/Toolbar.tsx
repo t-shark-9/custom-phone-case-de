@@ -13,7 +13,13 @@ import {
   Download,
   ShoppingCart,
   FolderOpen,
-  CubeTransparent
+  Sparkle,
+  Sticker,
+  Trash,
+  ArrowLeft,
+  Storefront,
+  MapTrifold,
+  Drop
 } from '@phosphor-icons/react'
 import type { ToolMode } from '@/lib/types'
 
@@ -27,7 +33,8 @@ interface ToolbarProps {
   onAddToCart: () => void
   onViewCart: () => void
   onViewGallery: () => void
-  onView3DModels?: () => void
+  onClearDesign?: () => void
+  onBackToShop?: () => void
   canUndo: boolean
   canRedo: boolean
   cartItemCount: number
@@ -43,17 +50,21 @@ export function Toolbar({
   onAddToCart,
   onViewCart,
   onViewGallery,
-  onView3DModels,
+  onClearDesign,
+  onBackToShop,
   canUndo,
   canRedo,
   cartItemCount,
 }: ToolbarProps) {
   const tools: Array<{ id: ToolMode; icon: React.ReactNode; label: string }> = [
     { id: 'select', icon: <Cube size={20} />, label: 'Select' },
-    { id: 'draw', icon: <Pencil size={20} />, label: 'Draw' },
-    { id: 'image', icon: <Image size={20} />, label: 'Add Image' },
+    { id: 'color', icon: <PaintBucket size={20} />, label: 'Color' },
+    { id: 'texture', icon: <Sparkle size={20} />, label: 'Texture' },
+    { id: 'uvmap', icon: <MapTrifold size={20} />, label: 'UV Map' },
+    { id: 'decal', icon: <Sticker size={20} />, label: 'Decals' },
     { id: 'parts', icon: <Cube size={20} />, label: '3D Parts' },
-    { id: 'color', icon: <PaintBucket size={20} />, label: 'Case Color' },
+    { id: 'metaball', icon: <Drop size={20} />, label: 'Metaballs' },
+    { id: 'image', icon: <Image size={20} />, label: 'Images' },
   ]
 
   return (
@@ -64,6 +75,13 @@ export function Toolbar({
             CaseCanvas
           </h1>
         </div>
+
+        {onBackToShop && (
+          <Button variant="outline" onClick={onBackToShop} className="w-full">
+            <ArrowLeft size={18} />
+            <span className="ml-2">Back to Shop</span>
+          </Button>
+        )}
 
         <Separator />
 
@@ -142,17 +160,17 @@ export function Toolbar({
             <span className="ml-2">My Designs</span>
           </Button>
 
-          {onView3DModels && (
-            <Button variant="outline" onClick={onView3DModels} className="w-full">
-              <CubeTransparent size={18} />
-              <span className="ml-2">View 3D Models</span>
-            </Button>
-          )}
-
           <Button variant="outline" onClick={onExport} className="w-full">
             <Download size={18} />
-            <span className="ml-2">Export 3D Model</span>
+            <span className="ml-2">Export</span>
           </Button>
+
+          {onClearDesign && (
+            <Button variant="outline" onClick={onClearDesign} className="w-full text-destructive hover:text-destructive">
+              <Trash size={18} />
+              <span className="ml-2">Clear</span>
+            </Button>
+          )}
         </div>
 
         <div className="mt-auto space-y-2">
