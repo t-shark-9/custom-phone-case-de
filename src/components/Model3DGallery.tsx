@@ -14,14 +14,14 @@ export function Model3DGallery() {
         
         <TabsContent value="iphone14">
           <Model3DViewer
-            modelPath="/models/iphone_14_pro.stl"
+            modelPath="/models/iphone_14_pro.glb"
             title="iPhone 14 Pro Phone Case"
           />
         </TabsContent>
         
         <TabsContent value="iphone16">
           <Model3DViewer
-            modelPath="/models/iphone_16_pro.stl"
+            modelPath="/models/iphone_16_pro.glb"
             title="iPhone 16 Pro Phone Case"
           />
         </TabsContent>

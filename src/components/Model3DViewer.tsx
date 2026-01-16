@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
@@ -58,14 +58,17 @@ export function Model3DViewer({ modelPath, title }: Model3DViewerProps) {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    // Load STL model
-    const loader = new STLLoader();
+    // Load GLTF model
+    const loader = new GLTFLoader();
     loader.load(
       modelPath,
-      (geometry) => {
-        // Center and scale the geometry
-        geometry.center();
-        geometry.computeVertexNormals();
+      (gltf) => {
+        const model = gltf.scene;
+
+        // Center the model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
 
         // Create material with nice colors
         const material = new THREE.MeshPhongMaterial({
@@ -75,26 +78,32 @@ export function Model3DViewer({ modelPath, title }: Model3DViewerProps) {
           flatShading: false,
         });
 
-        const mesh = new THREE.Mesh(geometry, material);
+        // Apply material to all meshes
+        model.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.material = material;
+          }
+        });
         
         // Auto-scale to fit in view
-        const box = new THREE.Box3().setFromObject(mesh);
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = 80 / maxDim;
-        mesh.scale.setScalar(scale);
+        model.scale.setScalar(scale);
 
-        scene.add(mesh);
+        scene.add(model);
 
         // Add grid helper
         const gridHelper = new THREE.GridHelper(200, 20, 0xcccccc, 0xeeeeee);
         scene.add(gridHelper);
       },
       (progress) => {
-        console.log(`Loading: ${(progress.loaded / progress.total) * 100}%`);
+        if (progress.total > 0) {
+          console.log(`Loading: ${(progress.loaded / progress.total) * 100}%`);
+        }
       },
       (error) => {
-        console.error('Error loading STL:', error);
+        console.error('Error loading GLTF:', error);
       }
     );
 

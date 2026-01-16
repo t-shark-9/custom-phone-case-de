@@ -17,7 +17,7 @@ import {
   TextT
 } from '@phosphor-icons/react'
 import * as THREE from 'three'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { PhoneModel, CaseTexture } from '@/lib/types'
 import { PHONE_MODELS, PRESET_COLORS, FONT_OPTIONS } from '@/lib/types'
 
@@ -60,15 +60,31 @@ export function UVMapEditor({
   const canvasWidth = 512
   const canvasHeight = 512
 
-  // Load STL model and extract UV coordinates
+  // Load GLTF model and extract UV coordinates
   useEffect(() => {
     setIsLoadingModel(true)
-    const loader = new STLLoader()
+    const loader = new GLTFLoader()
     const modelPath = phoneModel === 'iphone-14-pro' 
-      ? '/models/iphone_14_pro.stl' 
-      : '/models/iphone_16_pro.stl'
+      ? '/models/iphone_14_pro.glb' 
+      : '/models/iphone_16_pro.glb'
 
-    loader.load(modelPath, (geometry) => {
+    loader.load(modelPath, (gltf) => {
+      const model = gltf.scene
+      
+      // Find first mesh in the model
+      let geometry: THREE.BufferGeometry | null = null
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh && !geometry) {
+          geometry = child.geometry
+        }
+      })
+      
+      if (!geometry) {
+        setIsLoadingModel(false)
+        return
+      }
+      
+      // Center and compute bounds
       geometry.center()
       geometry.computeVertexNormals()
       geometry.computeBoundingBox()

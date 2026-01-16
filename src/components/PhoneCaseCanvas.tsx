@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { Placed3DPart, DrawStroke, PhoneModel } from '@/lib/types'
 import { PHONE_MODELS } from '@/lib/types'
 import { Button } from '@/components/ui/button'
@@ -40,11 +40,11 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
   const getModelPath = (model: PhoneModel): string => {
     switch (model) {
       case 'iphone-14-pro':
-        return '/models/iphone_14_pro.stl'
+        return '/models/iphone_14_pro.glb'
       case 'iphone-16-pro':
-        return '/models/iphone_16_pro.stl'
+        return '/models/iphone_16_pro.glb'
       default:
-        return '/models/iphone_16_pro.stl'
+        return '/models/iphone_16_pro.glb'
     }
   }
 
@@ -176,15 +176,20 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
     scene.add(partsGroup)
     partsGroupRef.current = partsGroup
 
-    const loader = new STLLoader()
+    const loader = new GLTFLoader()
     const modelPath = getModelPath(phoneModel)
 
     loader.load(
       modelPath,
-      (geometry) => {
-        geometry.center()
-        geometry.computeVertexNormals()
+      (gltf) => {
+        const model = gltf.scene
+        
+        // Center the model
+        const box = new THREE.Box3().setFromObject(model)
+        const center = box.getCenter(new THREE.Vector3())
+        model.position.sub(center)
 
+        // Apply case color to all meshes
         const caseMaterial = new THREE.MeshStandardMaterial({
           color: new THREE.Color(caseColor),
           roughness: 0.4,
@@ -192,21 +197,27 @@ export function PhoneCaseCanvas({ phoneModel, caseColor, parts, strokes, onPartC
           side: THREE.DoubleSide,
         })
 
-        const caseMesh = new THREE.Mesh(geometry, caseMaterial)
-        caseMesh.castShadow = true
-        caseMesh.receiveShadow = true
+        model.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.material = caseMaterial
+            child.castShadow = true
+            child.receiveShadow = true
+          }
+        })
         
-        scene.add(caseMesh)
-        caseMeshRef.current = caseMesh
+        scene.add(model)
+        caseMeshRef.current = model
 
         setIsLoading(false)
       },
       (progress) => {
-        const percentComplete = (progress.loaded / progress.total) * 100
-        console.log(`Loading model: ${percentComplete.toFixed(0)}%`)
+        if (progress.total > 0) {
+          const percentComplete = (progress.loaded / progress.total) * 100
+          console.log(`Loading model: ${percentComplete.toFixed(0)}%`)
+        }
       },
       (error) => {
-        console.error('Error loading STL model:', error)
+        console.error('Error loading GLTF model:', error)
         setLoadError(`Failed to load ${PHONE_MODELS.find(m => m.id === phoneModel)?.name} model`)
         setIsLoading(false)
       }
