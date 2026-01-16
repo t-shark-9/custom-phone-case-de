@@ -811,24 +811,30 @@ export const PHONE_MODELS: PhoneModelSpec[] = [
   },
 ]
 
+// Filter to only show older/supported phones (iPhone 13, 14, SE, Samsung)
+const ENABLED_SERIES = ['iPhone 13', 'iPhone 14', 'iPhone SE', 'Samsung Galaxy S']
+export const ENABLED_PHONE_MODELS = PHONE_MODELS.filter(m => 
+  ENABLED_SERIES.includes(m.series)
+)
+
 // Helper function to get phone model by ID
 export function getPhoneModel(id: PhoneModel): PhoneModelSpec | undefined {
-  return PHONE_MODELS.find(m => m.id === id)
+  return ENABLED_PHONE_MODELS.find(m => m.id === id)
 }
 
 // Helper to group phones by brand
 export function getPhonesByBrand(brand: 'Apple' | 'Samsung'): PhoneModelSpec[] {
-  return PHONE_MODELS.filter(m => m.brand === brand)
+  return ENABLED_PHONE_MODELS.filter(m => m.brand === brand)
 }
 
 // Helper to group phones by series
 export function getPhonesBySeries(series: string): PhoneModelSpec[] {
-  return PHONE_MODELS.filter(m => m.series === series)
+  return ENABLED_PHONE_MODELS.filter(m => m.series === series)
 }
 
 // Get unique series names
 export function getUniqueSeries(): string[] {
-  return [...new Set(PHONE_MODELS.map(m => m.series))]
+  return [...new Set(ENABLED_PHONE_MODELS.map(m => m.series))]
 }
 
 export interface DrawStroke {

@@ -4,7 +4,7 @@
  * Based on the Phone_cover_base.scad template
  */
 
-import { PhoneModelSpec, PHONE_MODELS } from './types'
+import { PhoneModelSpec, ENABLED_PHONE_MODELS } from './types'
 
 /**
  * Generate OpenSCAD parameter file content for a phone model
@@ -135,7 +135,7 @@ export function getOpenScadFilename(model: PhoneModelSpec): string {
 export function generateAllOpenScadParams(): Map<string, string> {
   const result = new Map<string, string>()
   
-  for (const model of PHONE_MODELS) {
+  for (const model of ENABLED_PHONE_MODELS) {
     const filename = getOpenScadFilename(model)
     const content = generateOpenScadParams(model)
     result.set(filename, content)

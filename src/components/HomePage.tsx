@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ShoppingCart, Sparkle, Cube, Palette, Star, Truck, Shield, CreditCard, FolderOpen, CaretDown, MagnifyingGlass } from '@phosphor-icons/react'
 import type { PhoneModel, PhoneModelSpec } from '@/lib/types'
-import { CASE_PRICE, PHONE_MODELS, getUniqueSeries } from '@/lib/types'
+import { CASE_PRICE, ENABLED_PHONE_MODELS, getUniqueSeries } from '@/lib/types'
 import { useState, useMemo } from 'react'
 
 interface HomePageProps {
@@ -14,7 +14,7 @@ interface HomePageProps {
 }
 
 // Featured products (shown prominently)
-const FEATURED_MODELS: PhoneModel[] = ['iphone-16-pro-max', 'iphone-16-pro', 'iphone-16', 'iphone-15-pro-max']
+const FEATURED_MODELS: PhoneModel[] = ['iphone-14-pro-max', 'iphone-14-pro', 'iphone-14', 'iphone-13-pro-max']
 
 const FEATURES = [
   {
@@ -47,7 +47,7 @@ function PhoneModelCard({ model, onSelect, featured = false }: { model: PhoneMod
   if (model.hasActionButton) badges.push('Action Button')
   if (model.hasCameraControl) badges.push('Camera Control')
   
-  const isNew = model.series.includes('17') || model.series.includes('16')
+  const isNew = model.series.includes('14')
   
   return (
     <Card className={`overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary ${featured ? '' : 'bg-card/50'}`}>
@@ -103,7 +103,7 @@ export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItem
   const series = useMemo(() => getUniqueSeries(), [])
   
   const filteredModels = useMemo(() => {
-    return PHONE_MODELS.filter(model => {
+    return ENABLED_PHONE_MODELS.filter(model => {
       if (selectedBrand !== 'all' && model.brand !== selectedBrand) return false
       if (selectedSeries !== 'all' && model.series !== selectedSeries) return false
       if (searchQuery && !model.name.toLowerCase().includes(searchQuery.toLowerCase())) return false
@@ -112,7 +112,7 @@ export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItem
   }, [selectedBrand, selectedSeries, searchQuery])
   
   const featuredModels = useMemo(() => {
-    return PHONE_MODELS.filter(m => FEATURED_MODELS.includes(m.id))
+    return ENABLED_PHONE_MODELS.filter(m => FEATURED_MODELS.includes(m.id))
   }, [])
   
   return (
@@ -135,7 +135,7 @@ export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItem
               Products
             </a>
             <a href="#all-models" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              All Models ({PHONE_MODELS.length})
+              All Models ({ENABLED_PHONE_MODELS.length})
             </a>
             <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               Features
@@ -166,7 +166,7 @@ export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItem
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <Badge variant="secondary" className="mb-4">
-            � Now Supporting {PHONE_MODELS.length}+ Phone Models!
+            🎉 Now Supporting {ENABLED_PHONE_MODELS.length}+ Phone Models!
           </Badge>
           <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
             Design Your Perfect
@@ -177,7 +177,7 @@ export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItem
             add 3D bumps, grooves, fidgets, and make it truly yours.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => onStartDesigning('iphone-16-pro-max')} className="text-lg px-8">
+            <Button size="lg" onClick={() => onStartDesigning('iphone-14-pro-max')} className="text-lg px-8">
               <Sparkle className="mr-2" size={20} />
               Start Designing
             </Button>
@@ -268,7 +268,7 @@ export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItem
             </div>
             
             <p className="text-sm text-muted-foreground">
-              Showing {filteredModels.length} of {PHONE_MODELS.length} models
+              Showing {filteredModels.length} of {ENABLED_PHONE_MODELS.length} models
             </p>
           </div>
           

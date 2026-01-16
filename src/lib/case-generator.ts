@@ -6,7 +6,7 @@
 
 import * as THREE from 'three'
 import type { PhoneModelSpec } from './types'
-import { PHONE_MODELS, getPhoneModel } from './types'
+import { ENABLED_PHONE_MODELS, getPhoneModel } from './types'
 
 // Case design parameters
 const CASE_WALL_THICKNESS = 1.5 // mm
@@ -299,4 +299,4 @@ export function geometryToSTL(geometry: THREE.BufferGeometry): string {
 }
 
 // Export all available models
-export { PHONE_MODELS, getPhoneModel }
+export { ENABLED_PHONE_MODELS, getPhoneModel }
