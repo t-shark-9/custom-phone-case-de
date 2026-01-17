@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingCart, Sparkle, Cube, Palette, Star, Truck, Shield, CreditCard, FolderOpen, CaretDown, MagnifyingGlass } from '@phosphor-icons/react'
+import { ShoppingCart, Sparkle, Cube, Palette, Star, Truck, Shield, CreditCard, FolderOpen, CaretDown, MagnifyingGlass, GearSix } from '@phosphor-icons/react'
 import type { PhoneModel, PhoneModelSpec } from '@/lib/types'
 import { CASE_PRICE, ENABLED_PHONE_MODELS, getUniqueSeries } from '@/lib/types'
 import { useState, useMemo } from 'react'
@@ -10,6 +10,7 @@ interface HomePageProps {
   onStartDesigning: (model: PhoneModel) => void
   onViewCart: () => void
   onViewGallery?: () => void
+  onViewAdmin?: () => void
   cartItemCount: number
 }
 
@@ -94,7 +95,7 @@ function PhoneModelCard({ model, onSelect, featured = false }: { model: PhoneMod
   )
 }
 
-export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItemCount }: HomePageProps) {
+export function HomePage({ onStartDesigning, onViewCart, onViewGallery, onViewAdmin, cartItemCount }: HomePageProps) {
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'Apple' | 'Samsung'>('all')
   const [selectedSeries, setSelectedSeries] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -372,12 +373,18 @@ export function HomePage({ onStartDesigning, onViewCart, onViewGallery, cartItem
             <span className="font-bold text-foreground">CaseCanvas</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2025 CaseCanvas. All rights reserved.
+            © 2026 CaseCanvas. All rights reserved.
           </p>
           <div className="flex gap-4 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
             <a href="#" className="hover:text-foreground transition-colors">Terms</a>
             <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+            {onViewAdmin && (
+              <button onClick={onViewAdmin} className="hover:text-foreground transition-colors flex items-center gap-1">
+                <GearSix size={14} />
+                Admin
+              </button>
+            )}
           </div>
         </div>
       </footer>

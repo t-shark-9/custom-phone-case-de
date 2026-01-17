@@ -995,3 +995,26 @@ export const FONT_OPTIONS = [
 ]
 
 export const CASE_PRICE = 29.99
+
+// Order type for purchase tracking
+export interface Order {
+  id: string
+  orderNumber: string
+  items: CartItem[]
+  customer: {
+    fullName: string
+    email: string
+    address: string
+    city: string
+    state: string
+    zipCode: string
+    country: string
+  }
+  subtotal: number
+  shipping: number
+  tax: number
+  total: number
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  createdAt: string
+  designFiles: string[] // Base64 or URLs to design files
+}

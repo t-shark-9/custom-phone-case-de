@@ -16,7 +16,7 @@ import {
   Truck
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
-import type { CartItem } from '@/lib/types'
+import type { CartItem, Order } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Custom hook for local storage
@@ -119,10 +119,32 @@ export function CartPage({ onBack }: CartPageProps) {
       description: 'Please wait while we confirm your order'
     })
     
+    // Generate order number
+    const orderNumber = `CC-${Date.now().toString(36).toUpperCase()}`
+    
+    // Create order object
+    const newOrder: Order = {
+      id: `order-${Date.now()}`,
+      orderNumber,
+      items: cart || [],
+      customer: shippingInfo,
+      subtotal,
+      shipping,
+      tax,
+      total,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      designFiles: []
+    }
+    
+    // Save to admin orders in localStorage
+    const existingOrders = JSON.parse(localStorage.getItem('admin-orders') || '[]')
+    localStorage.setItem('admin-orders', JSON.stringify([newOrder, ...existingOrders]))
+    
     setTimeout(() => {
       setCheckoutStep('confirmation')
       toast.success('Order placed successfully!', {
-        description: 'You will receive a confirmation email shortly'
+        description: `Order #${orderNumber} - You will receive a confirmation email shortly`
       })
     }, 2000)
   }

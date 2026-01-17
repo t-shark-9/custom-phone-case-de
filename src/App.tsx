@@ -9,6 +9,7 @@ import { CartPage } from './components/CartPage'
 import { SavedDesignsGallery } from './components/SavedDesignsGallery'
 import { Model3DGallery } from './components/Model3DGallery'
 import { HomePage } from './components/HomePage'
+import { AdminPage } from './components/AdminPage'
 import { Toaster, toast } from 'sonner'
 import type { 
   ToolMode, 
@@ -50,7 +51,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((pre
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'designer' | 'cart' | 'gallery' | '3d-models'>('home')
+  const [currentView, setCurrentView] = useState<'home' | 'designer' | 'cart' | 'gallery' | '3d-models' | 'admin'>('home')
   const [currentTool, setCurrentTool] = useState<ToolMode>('select')
   const [phoneModel, setPhoneModel] = useState<PhoneModel>('iphone-16-pro')
   const [caseColor, setCaseColor] = useState('#8B5CF6')
@@ -324,6 +325,7 @@ function App() {
           onStartDesigning={handleStartDesigning}
           onViewCart={handleViewCart}
           onViewGallery={handleViewGallery}
+          onViewAdmin={() => setCurrentView('admin')}
           cartItemCount={(cart || []).length}
         />
       ) : currentView === 'gallery' ? (
@@ -333,6 +335,8 @@ function App() {
         />
       ) : currentView === 'cart' ? (
         <CartPage onBack={handleBackToHome} />
+      ) : currentView === 'admin' ? (
+        <AdminPage onBack={handleBackToHome} />
       ) : currentView === '3d-models' ? (
         <div className="h-screen w-screen overflow-auto bg-gray-50">
           <Model3DGallery />
