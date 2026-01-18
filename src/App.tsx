@@ -10,6 +10,7 @@ import { SavedDesignsGallery } from './components/SavedDesignsGallery'
 import { Model3DGallery } from './components/Model3DGallery'
 import { HomePage } from './components/HomePage'
 import { AdminPage } from './components/AdminPage'
+import { BuyScreen } from './components/BuyScreen'
 import { Toaster, toast } from 'sonner'
 import type { 
   ToolMode, 
@@ -51,7 +52,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((pre
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'designer' | 'cart' | 'gallery' | '3d-models' | 'admin'>('home')
+  const [currentView, setCurrentView] = useState<'home' | 'designer' | 'cart' | 'gallery' | '3d-models' | 'admin' | 'buy'>('home')
   const [currentTool, setCurrentTool] = useState<ToolMode>('select')
   const [phoneModel, setPhoneModel] = useState<PhoneModel>('iphone-16-pro')
   const [caseColor, setCaseColor] = useState('#8B5CF6')
@@ -337,6 +338,23 @@ function App() {
         <CartPage onBack={handleBackToHome} />
       ) : currentView === 'admin' ? (
         <AdminPage onBack={handleBackToHome} />
+      ) : currentView === 'buy' ? (
+        <BuyScreen 
+          design={{
+            id: `design-${Date.now()}`,
+            name: 'Mein Design',
+            timestamp: Date.now(),
+            caseColor,
+            caseTexture: caseTexture || undefined,
+            phoneModel,
+            strokes,
+            images,
+            decals,
+            parts,
+          }}
+          onBack={() => setCurrentView('designer')}
+          onComplete={handleBackToHome}
+        />
       ) : currentView === '3d-models' ? (
         <div className="h-screen w-screen overflow-auto bg-gray-50">
           <Model3DGallery />
@@ -553,13 +571,22 @@ function App() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               </div>
-              <button
-                onClick={handleAddToCart}
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full font-semibold text-sm shadow-lg hover:opacity-90 transition-opacity"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                $29.99
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAddToCart}
+                  className="flex items-center gap-2 bg-muted text-foreground px-3 py-2 rounded-full font-medium text-sm hover:bg-muted/80 transition-opacity"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                  <span className="hidden sm:inline">Warenkorb</span>
+                </button>
+                <button
+                  onClick={() => setCurrentView('buy')}
+                  className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full font-semibold text-sm shadow-lg hover:opacity-90 transition-opacity"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                  €29,99
+                </button>
+              </div>
             </div>
           </div>
 
